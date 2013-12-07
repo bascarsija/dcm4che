@@ -191,22 +191,11 @@ public class FindSCU {
         /*
          * [#LIB-113]: Wrong file names for files created by dcm4che tools 
          *
-         * Since outFileFormat is processed by DecimalFormat, assume that
-         * a '.' preceding a series of characters that would not all be
-         * substituted by DecimalFormat is meant to be interpreted as a filename
-         * extension, as opposed to a decimal point (which would be substituted
-         * with the localized decimal separator), and backslash-escape it if
-         * it is not already escaped.
+         * Assume all '.' characters in outFileFormat are actually periods
+         * as opposed to decimal separators, which would be localized (e.g.,
+         * to ',' in es_ES.UTF-8) by DecimalFormat
          */
-    	Matcher matcher = Pattern.compile(
-    		"^(.+[^\\\\])\\.((?:[^.0#]+)|(?:(?:[0#][^.0#]|[^.0#]+[0#])[^.]*))$"
-    	).matcher(outFileFormat);
-    	
-    	if (matcher.matches()) {
-    		outFileFormat = matcher.group(1) + "\\." + matcher.group(2);
-    	}
-    	
-    	this.outFileFormat = new DecimalFormat(outFileFormat);
+    	this.outFileFormat = new DecimalFormat(outFileFormat.replace(".", "\\."));
     }
 
     public final void setXSLT(File xsltFile) {
