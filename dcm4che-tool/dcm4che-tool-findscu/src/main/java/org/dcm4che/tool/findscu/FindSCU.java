@@ -53,6 +53,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Templates;
@@ -186,7 +188,25 @@ public class FindSCU {
     }
 
     public final void setOutputFileFormat(String outFileFormat) {
-        this.outFileFormat = new DecimalFormat(outFileFormat);
+        /*
+         * [#LIB-113]: Wrong file names for files created by dcm4che tools 
+         *
+         * Since outFileFormat is processed by DecimalFormat, assume that
+         * a '.' preceding a series of characters that would not all be
+         * substituted by DecimalFormat is meant to be interpreted as a filename
+         * extension, as opposed to a decimal point (which would be substituted
+         * with the localized decimal separator), and backslash-escape it if
+         * it is not already escaped.
+         */
+    	Matcher matcher = Pattern.compile(
+    		"^(.+[^\\\\])\\.((?:[^.0#]+)|(?:(?:[0#][^.0#]|[^.0#]+[0#])[^.]*))$"
+    	).matcher(outFileFormat);
+    	
+    	if (matcher.matches()) {
+    		outFileFormat = matcher.group(1) + "\\." + matcher.group(2);
+    	}
+    	
+    	this.outFileFormat = new DecimalFormat(outFileFormat);
     }
 
     public final void setXSLT(File xsltFile) {
